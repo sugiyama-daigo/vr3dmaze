@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <title>test</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="./css/style.css">
+    </head>
+    <body>
+    
+    <script src="./js/cannon.min.js"></script>
+    <script src="./js/three.min.js"></script>
+    <script src="./js/jquery-1.11.1.min.js"></script>
+        <script>
+
+            var world = null;
+            var phyPlane = null;
+            var scene = null;
+            var camera = null;
+            var viewPlane = null;
+            var renderer = null;
+            
+            var wSizeWidth = window.innerWidth; //描画サイズ（横）
+            var wSizeHeight = window.innerHeight; //描画サイズ（縦）
+
+            
+            var selfData = new Object();
+                selfData.angle = 270; //方角
+                selfData.posX = 48; //位置
+                selfData.posY = 47; //位置
+                selfData.height = 2; //高さ
+                selfData.speed = 5; //前進速度
+            var theta = 0;
+            
+            
+            //Texture---------------------------------------------------------------
+            var ground_texture = THREE.ImageUtils.loadTexture( './assets/images/ground.jpg' );
+            ground_texture.wrapS = ground_texture.wrapT = THREE.RepeatWrapping;
+            ground_texture.repeat.set( 64, 64 );
+            
+            initWorld();
+            setView();
+            animate();
+
+            function initWorld() {
+
+                world = new CANNON.World();       //物理世界を作成
+                world.gravity.set(0, -9.82, 0);   //物理世界に重力を設定
+                world.broadphase = new CANNON.NaiveBroadphase(); //衝突している剛体の判定
+                world.solver.iterations = 10;     //反復計算回数
+                world.solver.tolerance = 0.1;     //許容値
+
+                //Cannon Ground--------------------------------------------------------------
+                var groundMat = new CANNON.Material('groundMat');    //マテリアルを作成
+                groundMat.friction = 0.3;       //摩擦係数
+                groundMat.restitution = 0.5;    //反発係数
+
+                phyPlane = new CANNON.Body({mass: 0});      //ボディを作成
+                phyPlane.material = groundMat;              //ボディにマテリアルを設定
+                phyPlane.addShape(new CANNON.Plane());      //地面を作成
+                phyPlane.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2 );   //地面を回転
+                world.add(phyPlane); //物理世界に追加
+                
+                
+                //Canon Sphere--------------------------------------------------------------
+                sphereShape = new CANNON.Sphere(1);
+                
+                var sphereMat = new CANNON.Material('sphereMat');
+                sphereMat.friction = 0.8;
+                sphereMat.restitution = 0.5;
+
+                selfObj = new CANNON.Body({mass: 1});
+                selfObj.material = sphereMat;
+
+                
+                selfObj.addShape(sphereShape);
+                selfObj.position.x = selfData.posX;
+                selfObj.position.y = selfData.height;
+                selfObj.position.z = selfData.posY;
+                world.add(selfObj);
+                
+            }
+
+            function setView() {
+　　　　　　　　scene = new THREE.Scene();                    //Three.jsの世界（シーン）を作成
+　　　　　　　　scene.fog = new THREE.Fog(0x000000, 1, 100);  //フォグ（黒色）を作成
+                
+                
+                //Three Camera--------------------------------------------------------------
+                camera = new THREE.PerspectiveCamera(90, 800 / 600, 0.1, 10000);
+                camera.position.set(Math.cos(Math.PI / 5) * 30, 5, Math.sin(Math.PI / 5) * 80);
+                changeLookAt()
+                
+                scene.add(camera);
+                
+                
+                //Three Light--------------------------------------------------------------
+                var light = new THREE.DirectionalLight(0xffffff, 0.5);  //照らす方向を指定する光源
+                light.position.set(10, 10, -10);  //光源の位置を指定
+                light.castShadow = true;          //影を作る物体かどうかを設定
+                light.shadowMapWidth = 2024;　    //影の精細さ（解像度）を設定
+                light.shadowMapHeight = 2024;     //影の精細さ（解像度）を設定
+                light.shadowCameraLeft = -50;　   //ライトの視点方向の影の表示度合い
+                light.shadowCameraRight = 50;     //ライトの視点方向の影の表示度合い
+                light.shadowCameraTop = 50;       //ライトの視点方向の影の表示度合い
+                light.shadowCameraBottom = -50;   //ライトの視点方向の影の表示度合い
+                light.shadowCameraFar = 100;      //影を表示する範囲の設定
+                light.shadowCameraNear = 0;       //影を表示する範囲の設定
+                light.shadowDarkness = 0.5;       //影の透明度
+                scene.add(light);
+              
+                var amb   = new THREE.AmbientLight(0xffffff);  //全体に光を当てる光源
+                scene.add(amb);                   //光源をシーンに追加
+
+                
+                //Three Sphere
+                geometry = new THREE.SphereGeometry(0.5);
+                material = new THREE.MeshLambertMaterial({
+                    color: 0x222222
+                });
+                
+                //Three Ground--------------------------------------------------------------
+                var graMeshGeometry = new THREE.PlaneGeometry(300, 300);  //地面の形状を作成
+                var graMaterial = new THREE.MeshBasicMaterial({           //マテリアルを作成
+                        map: ground_texture                               //地面にテクスチャ（砂地）を設定
+                    });                                                   //「ground_texture」は別部分で作成
+    
+                viewPlane = new THREE.Mesh(graMeshGeometry, graMaterial); //メッシュを作成
+                viewPlane.rotation.x = -Math.PI / 2;  //地面を回転
+                viewPlane.position.y = 1 / 2;         //地面の位置を設定
+                viewPlane.receiveShadow = true;       //地面に影を表示する
+                scene.add(viewPlane);                 //シーンに追加
+                
+                
+                //Three Render--------------------------------------------------------------
+                renderer = new THREE.WebGLRenderer({antialias: true});  //レンダラーを作成
+                renderer.setSize(wSizeWidth, wSizeHeight);              //レンダラーのサイズを設定
+
+                renderer.setClearColor(0xffffff, 1);                    //レンダラーの描画内容をクリア
+                renderer.shadowMapEnabled = true;                       //レンダラーの影の描画を有効化
+                document.body.appendChild(renderer.domElement);         //DOM要素をBodyに追加
+                
+                //Start Rendering--------------------------------------------------------------
+                renderer.render(scene, camera);  //レンダラーで3D空間を描画
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                // 物理エンジンの時間を進める
+                world.step(1 / 60);
+                
+                //カメラ位置の設定
+                camera.position.set(selfObj.position.x, selfObj.position.y + 0.6, selfObj.position.z);
+                
+                // レンダリング
+                renderer.render(scene, camera);
+            }
+            
+            function changeLookAt(){
+                theta = selfData.angle / 180 * Math.PI;
+                var posX = selfData.posX + Math.cos(theta) * 10000;
+                var posY = selfData.posY + Math.sin(theta) * 10000;
+                camera.lookAt(new THREE.Vector3(posX, 0, posY));     //カメラの視点（視線）を変える
+            }
+           
+            
+//Library-----------------------------------------------------------------------------------
+function makeBox(mode, posX, posY, posZ, sizeX, sizeY, sizeZ, velocX, velocY, velocZ, angVelocX, angVelocY, angVelocZ, mass, dampVal, color ){
+    var retObj = null;
+    
+    if(mode === 0){
+        //Three
+        thrBox = new THREE.Mesh(new THREE.BoxGeometry(sizeX, sizeY, sizeZ, 10, 10), new THREE.MeshBasicMaterial({
+            //color: color
+            map: wall_texture
+        }));
+        thrBox.castShadow = true;
+        thrBox.receiveShadow = true;
+        thrBox.position.x = posX;
+        thrBox.position.y = posY + ( sizeY /2 );
+        thrBox.position.z = posZ;
+        
+        retObj = thrBox;
+    } else if(mode === 1){
+        //cannon
+        canBox = new CANNON.Body({mass: mass});
+        canBox.addShape(new CANNON.Box(new CANNON.Vec3(sizeX/2, sizeY/2, sizeZ/2)));
+        canBox.position.set(posX, posY, posZ);
+        canBox.velocity.set(velocX, velocY, velocZ);
+        canBox.angularVelocity.set(angVelocX, angVelocY, angVelocZ);
+        canBox.angularDamping = dampVal;
+        
+        retObj = canBox;
+    }
+
+    return retObj;
+}
+
+
+function createBoxObject(posX, posY, posZ, sizeX, sizeY, sizeZ, velocX, velocY, velocZ, angVelocX, angVelocY, angVelocZ, mass, dampVal, color){
+    var box = new Object();
+    box.posX = posX;
+    box.posY = posY;
+    box.posZ = posZ;
+    box.sizeX = sizeX;
+    box.sizeY = sizeY;
+    box.sizeZ = sizeZ;
+    box.velocX = velocX; 
+    box.velocY = velocY;
+    box.velocZ = velocZ;
+    box.angVelocX = angVelocX; 
+    box.angVelocY = angVelocY;
+    box.angVelocZ = angVelocZ;
+    box.mass = mass;
+    box.dampVal = dampVal; 
+    box.color = color;
+    
+    return box;
+}
+
+        </script>
+    </body>
+</html>
