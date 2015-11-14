@@ -1,0 +1,73 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+#debug { 
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 0;
+    padding: 0;
+    
+}
+
+#reset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    position: absolute;
+    top: 0;  
+    left: 0;
+    border-radius: 0px;
+}
+
+#jump {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
+#forward {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
+#stop {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
+#back {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
+#turn_left {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
+#turn_right {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    height: 80px
+}
+
