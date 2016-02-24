@@ -35,12 +35,12 @@
             var mapData = getMapData(1);   //Stage1の壁座標を取得
             var boxObjArray = new Array(); //Three.jsとCANNON.jsの壁オブジェクトを作成する際に元になるオブジェクト
 
-            for(cnt0 = 0; cnt0 < mapData.length; cnt0++){
-                var mData = mapData[cnt0];   //配列内の壁座標データを取得
+            for(var cnt = 0; cnt < mapData.length; cnt++){
+                var mData = mapData[cnt];   //配列内の壁座標データを取得
                 var wall = mData.split("_"); //XとZのデータを分割
                 
 		//Three.jsとCANNON.jsの壁オブジェクトの元になるオブジェクトを生成
-                boxObjArray[cnt0] = createBoxObject(Number(wall[0]), 0, Number(wall[1]), 1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0x000000 );
+                boxObjArray[cnt] = createBoxObject(Number(wall[0]), 0, Number(wall[1]), 1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0x000000 );
             }
             
             var thrBoxArray = new Array();
@@ -77,7 +77,7 @@
                 world.add(phyPlane); //物理世界に追加
                 
                 //Cannon Box--------------------------------------------------------------
-                for( cnt=0; cnt<boxObjArray.length; cnt++){
+                for(var cnt = 0; cnt < boxObjArray.length; cnt++){
                     canBoxArray[cnt] = makeBox( 1, boxObjArray[cnt].posX, boxObjArray[cnt].posY, boxObjArray[cnt].posZ, boxObjArray[cnt].sizeX, boxObjArray[cnt].sizeY, boxObjArray[cnt].sizeZ, boxObjArray[cnt].velocX, boxObjArray[cnt].velocY, boxObjArray[cnt].velocZ,boxObjArray[cnt].angVelocX, boxObjArray[cnt].angVelocY, boxObjArray[cnt].angVelocZ, boxObjArray[cnt].mass, boxObjArray[cnt].dampVal, boxObjArray[cnt].color );
                     world.add(canBoxArray[cnt]);
                 }
@@ -128,9 +128,9 @@
                 scene.add(amb);                   //光源をシーンに追加
                 
                 //Three Box--------------------------------------------------------------
-                for( cnt2=0; cnt2<boxObjArray.length; cnt2++){
-                    thrBoxArray[cnt2] = makeBox( 0, boxObjArray[cnt2].posX, boxObjArray[cnt2].posY, boxObjArray[cnt2].posZ, boxObjArray[cnt2].sizeX, boxObjArray[cnt2].sizeY, boxObjArray[cnt2].sizeZ, boxObjArray[cnt2].velocX, boxObjArray[cnt2].velocY, boxObjArray[cnt2].velocZ, boxObjArray[cnt2].angVelocX, boxObjArray[cnt2].angVelocY, boxObjArray[cnt2].angVelocZ, boxObjArray[cnt2].mass, boxObjArray[cnt2].dampVal, boxObjArray[cnt2].color );
-                    scene.add(thrBoxArray[cnt2]);
+                for(var cnt=0; cnt < boxObjArray.length; cnt++){
+                    thrBoxArray[cnt] = makeBox( 0, boxObjArray[cnt].posX, boxObjArray[cnt].posY, boxObjArray[cnt].posZ, boxObjArray[cnt].sizeX, boxObjArray[cnt].sizeY, boxObjArray[cnt].sizeZ, boxObjArray[cnt].velocX, boxObjArray[cnt].velocY, boxObjArray[cnt].velocZ, boxObjArray[cnt].angVelocX, boxObjArray[cnt].angVelocY, boxObjArray[cnt].angVelocZ, boxObjArray[cnt].mass, boxObjArray[cnt].dampVal, boxObjArray[cnt].color );
+                    scene.add(thrBoxArray[cnt]);
                 }
                 
                 //Three Sphere
